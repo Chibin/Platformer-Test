@@ -1,0 +1,9 @@
+*.swp
+x64
+tags
+*Copy.cpp
+ipch
+*.vsp
+*.opensdf
+*.psess
+*.sdf
