@@ -4,9 +4,10 @@
 #include "player_limits.h"
 struct levelMap;
 
+SDL_Renderer* renderer = NULL;
 bool quit = false;
 myObject objectDot;
-levelMap* firstLevel = new levelMap(80,80,"39_tiling/tiles.png");
+levelMap* firstLevel = NULL; 
 
 //Should only have a single instance
 playerManager pmanager(&objectDot);

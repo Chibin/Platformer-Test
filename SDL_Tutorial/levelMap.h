@@ -8,10 +8,12 @@ struct levelMap{
 	std::vector<sprite> tileList;
 	std::ifstream gridmap;
 	SDL_Surface* tiles;
-	levelMap(short, short, const char *);
+	SDL_Texture* texture_tiles;
+	SDL_Renderer* renderer;
+	levelMap(short, short, const char *, SDL_Renderer*);
 	void loadMap(const char*);
 	void populateMap();
-	void drawMap(SDL_Surface*);
+	void drawMap(SDL_Renderer*);
 	bool collissionManager(myObject* object);
 	bool isCollideX(myObject* object);
 	bool isCollideY(myObject* object);
@@ -43,10 +45,17 @@ levelMap::lrCheck(myObject* object){
 }
 
 levelMap::levelMap(short tile_height, short tile_width,
-				   const char* tile_path){
+				   const char* tile_path, SDL_Renderer* renderer){
+	std::cout << renderer << std::endl;
 	tiles = IMG_Load(tile_path);
 	if(tiles == NULL){
 		printf("Fail to load tiles.\n");
+	}
+	SDL_SetColorKey(tiles, SDL_TRUE, SDL_MapRGB( tiles->format, 0, 0xFF, 0xFF));
+	texture_tiles = SDL_CreateTextureFromSurface( renderer, tiles );
+	if ( texture_tiles == NULL){
+		printf("load failure! SDL error: %s\n", SDL_GetError());
+		std::cout << texture_tiles << std::endl;
 	}
 	char*** gridMap = NULL;
 	tile_h = tile_height;
@@ -222,15 +231,23 @@ levelMap::collissionManager(myObject* object){
 }
 
 void
-levelMap::drawMap(SDL_Surface* screenSurface){
+levelMap::drawMap(SDL_Renderer* _renderer){
 	SDL_Rect temp;
+	SDL_Rect renderQuad = {0,0,80,80};
+	//std::cout << "Renderer : "<< _renderer << std::endl;
+	//std::cout << map_rect.size() << std::endl;
 	for( int i = 0; i < map_rect.size(); i++){
 		temp.x = 80*(map_rect[i].first[0]-'0');
 		temp.y = 80*(map_rect[i].first[1]-'0');
 		temp.w = 80;
 		temp.h = 80;
-		SDL_BlitSurface( tiles, &temp, screenSurface, map_rect[i].second );
+		//SDL_BlitSurface( tiles, &temp, screenSurface, map_rect[i].second );
+		SDL_RenderCopy( _renderer, texture_tiles, &temp, map_rect[i].second);
 	}
+		//SDL_Rect renderQuad = {600, 700, 80, 90 };
+		//SDL_RenderCopy( _renderer, texture_tiles, &renderQuad, &renderQuad);
+		//SDL_Rect renderQuad2 = {0,80,80,80};
+		//SDL_RenderCopy( _renderer, texture_tiles, &renderQuad2, &renderQuad2);
 }
 
 void
@@ -307,6 +324,7 @@ levelMap::loadMap(const char* mapLocation){
 			}
 			std::cout << std::endl;
 		}
+
 		printWalls();
 	}
 }

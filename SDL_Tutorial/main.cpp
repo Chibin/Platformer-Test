@@ -13,6 +13,7 @@
 #include "eventHandler.h"
 #include "physics.h"
 #include "mapHandler.h"
+#include "textureWrapper.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -23,10 +24,11 @@ SDL_Window* window = NULL;
 //Surface contained by the window
 SDL_Surface* screenSurface = NULL;
 
+std::vector<SDL_Texture*> sdl_texture_list;
 std::vector<SDL_Surface*> sdl_surface_list;
 std::vector<SDL_Rect*> sdl_rect_list;
 
-SDL_Renderer* renderer = NULL;
+// Moved to texture wrapper
 SDL_Texture* gTexture = NULL;
 
 SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
@@ -89,28 +91,41 @@ bool init(){
 		return false;
 	}
 	else {
+		if( !SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1") ){
+			printf("Warning: linear texture filter not enabled.");
+		}
+		
 		//create window
-		window = SDL_CreateWindow ( "Testing",	SDL_WINDOWPOS_UNDEFINED,
-				SDL_WINDOWPOS_UNDEFINED,
-				SCREEN_WIDTH,
-				SCREEN_HEIGHT,
-				SDL_WINDOW_SHOWN );
+		window = SDL_CreateWindow ( "Testing",	
+									SDL_WINDOWPOS_UNDEFINED,
+									SDL_WINDOWPOS_UNDEFINED,
+									SCREEN_WIDTH,
+									SCREEN_HEIGHT,
+									SDL_WINDOW_SHOWN );
 		if( window == NULL ){
 			printf( "Window could not be created! \n \
 					SDL_ERROR: %s\n", SDL_GetError() );
 			return false;
 		}
 		else{
-			renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
-			if( !renderer){
+			renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
+			if( renderer == NULL){
 				printf("Renderer could not be craeted! SDL Error: %s\n", SDL_GetError() );
 			}
 			else{
 				//init render color
-				//SDL_SetRenderDrawColor( renderer, 0xFF, 0xFF, 0xFF, 0xFF );
+				SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0x00 );
+				firstLevel = new levelMap(80,80,"39_tiling/tiles.png", renderer);
+
+				int imgFlags = IMG_INIT_PNG;
+				if( !( IMG_Init( imgFlags ) & imgFlags ) )
+				{
+					printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
+					return false;
+				}
 			}
 			//Window surface
-			screenSurface = SDL_GetWindowSurface(window);
+			//screenSurface = SDL_GetWindowSurface(window);
 		}
 	}
 
@@ -136,6 +151,8 @@ void loadMedia(const char* file, struct position pos, SDL_Rect* _rect = NULL){
 	else{
 		printf("Loaded successfully: %s\n",file);
 		newTexture = SDL_CreateTextureFromSurface(renderer, bmp_surface);
+		sdl_texture_list.push_back(newTexture);
+		std::cout << sdl_texture_list[0] << std::endl;
 		sdl_surface_list.push_back(bmp_surface);
 		if ( _rect != NULL )
 			sdl_rect_list.push_back(_rect);
@@ -256,7 +273,6 @@ int main( int argc, char* args[] )
 	SDL_Rect* aiPos = new SDL_Rect();
 	aiPos->x = 40; aiPos->y = 40;
 
-	loadStage(); //Loads all the necessary map info
 
 	position start, goal;
 	start.x = 0; start.y = 0; start.cost = 50;
@@ -278,6 +294,7 @@ int main( int argc, char* args[] )
 		//pos.x = 0; pos.y = 0;
 		//loadMedia("x.bmp", pos);
 		pos.x = 20; pos.y = 20;
+		loadStage(); //Loads all the necessary map info
 
 		objectDot.loadMedia("39_tiling/dot.bmp");
 		sdl_surface_list.push_back(objectDot.getSpriteSurface());
@@ -285,6 +302,11 @@ int main( int argc, char* args[] )
 
 		for( int i = 0; i < sdl_surface_list.size(); i++){
 			if( sdl_surface_list[i] == NULL ){
+				printf("index: %d is NULL", i);
+			}
+		}
+		for( int i = 0; i < sdl_texture_list.size(); i++){
+			if( sdl_texture_list[i] == NULL ){
 				printf("index: %d is NULL", i);
 			}
 		}
@@ -337,18 +359,33 @@ int main( int argc, char* args[] )
 		// Do physics here
 		physics();
 
-
+		//SDL_FillRect(screenSurface, NULL, 0x000000);
 		// clean the screen first
-		SDL_FillRect(screenSurface, NULL, 0x000000);
+		SDL_SetRenderDrawColor( renderer, 255, 255, 0, 255 );
+		SDL_RenderClear( renderer );
 
-		firstLevel->drawMap(screenSurface);
+		firstLevel->drawMap(renderer);
 
 		for( int i = 0; i < sdl_surface_list.size(); i++){
-			SDL_BlitSurface( sdl_surface_list[i], NULL, screenSurface, sdl_rect_list[i] );
+			//SDL_BlitSurface( sdl_surface_list[i], NULL, screenSurface, sdl_rect_list[i] );
 		}
-		SDL_BlitSurface( sdl_surface_list[0], NULL, screenSurface, aiPos );
+		//SDL_BlitSurface( sdl_surface_list[0], NULL, screenSurface, aiPos );
+		SDL_Rect renderQuad = {600, 700, 80, 90 };
 
-		update( window );
+		if( sdl_texture_list.size() > 0 ){
+			SDL_RenderCopyEx( renderer, 
+							  sdl_texture_list[0],
+							  NULL,
+							  &renderQuad,
+							  0.0,
+							  NULL,
+							  SDL_FLIP_NONE);
+		}
+		else{
+			//printf("%d\n", sdl_texture_list.size());
+		}
+		//update( window );
+		SDL_RenderPresent( renderer );
 		//SDL_PumpEvents();
 	}
 
