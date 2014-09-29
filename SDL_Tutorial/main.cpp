@@ -296,8 +296,9 @@ int main( int argc, char* args[] )
 		pos.x = 20; pos.y = 20;
 		loadStage(); //Loads all the necessary map info
 
-		objectDot.loadMedia("39_tiling/dot.bmp");
+		objectDot.loadMedia("39_tiling/dot.bmp", renderer);
 		sdl_surface_list.push_back(objectDot.getSpriteSurface());
+		sdl_texture_list.push_back(objectDot.getSpriteTexture());
 		sdl_rect_list.push_back(dotPos);
 
 		for( int i = 0; i < sdl_surface_list.size(); i++){
@@ -363,29 +364,15 @@ int main( int argc, char* args[] )
 		// clean the screen first
 		SDL_SetRenderDrawColor( renderer, 255, 255, 0, 255 );
 		SDL_RenderClear( renderer );
-
 		firstLevel->drawMap(renderer);
 
 		for( int i = 0; i < sdl_surface_list.size(); i++){
 			//SDL_BlitSurface( sdl_surface_list[i], NULL, screenSurface, sdl_rect_list[i] );
+			SDL_RenderCopy( renderer, sdl_texture_list[i], NULL , sdl_rect_list[i]);
 		}
 		//SDL_BlitSurface( sdl_surface_list[0], NULL, screenSurface, aiPos );
-		SDL_Rect renderQuad = {600, 700, 80, 90 };
-
-		if( sdl_texture_list.size() > 0 ){
-			SDL_RenderCopyEx( renderer, 
-							  sdl_texture_list[0],
-							  NULL,
-							  &renderQuad,
-							  0.0,
-							  NULL,
-							  SDL_FLIP_NONE);
-		}
-		else{
-			//printf("%d\n", sdl_texture_list.size());
-		}
 		//update( window );
-		SDL_RenderPresent( renderer );
+		SDL_RenderPresent(renderer);
 		//SDL_PumpEvents();
 	}
 

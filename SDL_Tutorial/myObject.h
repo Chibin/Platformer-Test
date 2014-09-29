@@ -1,6 +1,7 @@
 struct myObject{
 	SDL_Rect Pos;
 	SDL_Surface* sprite;
+	SDL_Texture* texture_sprite;
 	float _weight;
 	float X, Y; // Tentative Positions
 	float velx, vely;
@@ -28,8 +29,9 @@ struct myObject{
 	bool hasAccelX();
 	bool hasAccelY();
 	// Will need to create a hash map of all the loaded textures later on
-	void loadMedia(const char*);
+	void loadMedia(const char*, SDL_Renderer*);
 	SDL_Surface* getSpriteSurface();
+	SDL_Texture* getSpriteTexture();
 };
 
 myObject::myObject(){
@@ -52,6 +54,10 @@ myObject::hasAccelY(){
 	return (accely	!= 0.0f);
 }
 
+SDL_Texture*
+myObject::getSpriteTexture(){
+	return texture_sprite;
+}
 
 SDL_Surface*
 myObject::getSpriteSurface(){
@@ -59,8 +65,11 @@ myObject::getSpriteSurface(){
 }
 
 void 
-myObject::loadMedia(const char* file){
+myObject::loadMedia(const char* file, SDL_Renderer* renderer){
 	sprite = SDL_LoadBMP(file);
+	texture_sprite = SDL_CreateTextureFromSurface(renderer, sprite);
+	Pos.w = sprite->w;
+	Pos.h = sprite->h;
 	if(sprite == NULL){
 		printf( "Unable to load image %s! \n\
 				SDL Error: %s\n", file, SDL_GetError() );
