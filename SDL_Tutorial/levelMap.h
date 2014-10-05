@@ -218,23 +218,12 @@ levelMap::collissionManager(myObject* object){
 		//printf("RIGHT\n");
 		return true;
 	}
-	// Calculate the grid ... 
-	//Top Corner
-	//printf("Top left X Location: %d \n", t_leftx/tile_w);
-	//printf("Top left Y location: %d \n", t_lefty/tile_h);
-	//printf("Top right X Location: %d \n", t_rightx/tile_w);
-	//printf("Top right Y location: %d \n", t_righty/tile_h);
-	//printf("Bottom left X Location: %d \n", b_leftx/tile_w);
-	//printf("Bottom left Y location: %d \n", b_lefty/tile_h);
-	//printf("Bottom right X Location: %d \n", b_rightx/tile_w);
-	//printf("Bottom right Y location: %d \n", b_righty/tile_h);
 
 	return false;
-
-	//return true;
 }
 
-void levelMap::loadSpriteMap(SDL_Renderer* renderer){
+void 
+levelMap::loadSpriteMap(SDL_Renderer* renderer){
 	/*
 	 * Creates a map texture to be used over and over instead of
 	 * recalculating the tiles location over and over...
