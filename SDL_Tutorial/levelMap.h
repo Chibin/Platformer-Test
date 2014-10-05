@@ -2,6 +2,7 @@ struct levelMap{
 
 	short tile_h, tile_w;
 	short dim_x, dim_y;
+	short LEVEL_WIDTH, LEVEL_HEIGHT;
 	char*** gridMap;
 	std::vector< std::pair<char*,SDL_Rect*> > map_rect;
 	std::map< std::string, char > walls;
@@ -9,11 +10,14 @@ struct levelMap{
 	std::ifstream gridmap;
 	SDL_Surface* tiles;
 	SDL_Texture* texture_tiles;
+	SDL_Texture* texture_map;
 	SDL_Renderer* renderer;
+	SDL_Surface* surface_map;
 	levelMap(short, short, const char *, SDL_Renderer*);
 	void loadMap(const char*);
 	void populateMap();
-	void drawMap(SDL_Renderer*);
+	void drawMap(SDL_Renderer*, SDL_Rect*);
+	void loadSpriteMap(SDL_Renderer* renderer);
 	bool collissionManager(myObject* object);
 	bool isCollideX(myObject* object);
 	bool isCollideY(myObject* object);
@@ -230,24 +234,53 @@ levelMap::collissionManager(myObject* object){
 	//return true;
 }
 
-void
-levelMap::drawMap(SDL_Renderer* _renderer){
+void levelMap::loadSpriteMap(SDL_Renderer* renderer){
+	/*
+	 * Creates a map texture to be used over and over instead of
+	 * recalculating the tiles location over and over...
+	 */ 
+
+	int rmask, gmask, bmask, amask;
+	int w, h;
+	rmask = gmask = bmask = amask = 0;
+	w = dim_x*80; 
+	h = dim_y*80;
+	surface_map = SDL_CreateRGBSurface(0, w, h, 32, rmask, gmask, bmask, amask);	
+	SDL_assert( surface_map != NULL );
 	SDL_Rect temp;
-	SDL_Rect renderQuad = {0,0,80,80};
-	//std::cout << "Renderer : "<< _renderer << std::endl;
-	//std::cout << map_rect.size() << std::endl;
 	for( int i = 0; i < map_rect.size(); i++){
 		temp.x = 80*(map_rect[i].first[0]-'0');
 		temp.y = 80*(map_rect[i].first[1]-'0');
 		temp.w = 80;
 		temp.h = 80;
-		//SDL_BlitSurface( tiles, &temp, screenSurface, map_rect[i].second );
-		SDL_RenderCopy( _renderer, texture_tiles, &temp, map_rect[i].second);
+		SDL_BlitSurface( tiles, &temp, surface_map, map_rect[i].second );
+		// SDL_RenderCopy( _renderer, texture_tiles, &temp, map_rect[i].second);
 	}
-		//SDL_Rect renderQuad = {600, 700, 80, 90 };
-		//SDL_RenderCopy( _renderer, texture_tiles, &renderQuad, &renderQuad);
-		//SDL_Rect renderQuad2 = {0,80,80,80};
-		//SDL_RenderCopy( _renderer, texture_tiles, &renderQuad2, &renderQuad2);
+	texture_map = SDL_CreateTextureFromSurface(renderer, surface_map);
+	SDL_assert( texture_map != NULL );
+
+}
+
+void
+levelMap::drawMap(SDL_Renderer* _renderer, SDL_Rect* camera){
+	// Clipping for the render
+	//printf("camera-> x: %d y: %d\n", camera->x, camera->y);
+	int x, y;
+	x = y = 0;
+
+	// Hardcoded screen width and height  :(
+	if( camera->x > 640/2 ){
+		if( LEVEL_WIDTH - camera->x < 640/2){
+			x = LEVEL_WIDTH - 640; 
+		}
+		else
+			x = camera->x - 640/2;
+	}
+	if( camera->y > 480 ){
+		y = camera->y - 480;
+	}
+	SDL_Rect renderQuad = {x, y, 640, 480};
+	SDL_RenderCopy( _renderer, texture_map, &renderQuad, NULL);
 }
 
 void
@@ -267,6 +300,10 @@ levelMap::loadMap(const char* mapLocation){
 		dim_x = atoi(x); dim_y = atoi(y);
 		printf("x: %d - y: %d\n", dim_x, dim_y);
 
+		// currently assuming 80 is our sprite size per block
+		// Should be able to dynamically change it later on... 
+		LEVEL_WIDTH = dim_x * 80;
+		LEVEL_HEIGHT = dim_y * 80;
 		gridMap = new char**[dim_x];
 		for(int i = 0; i < dim_x; i++){
 			gridMap[i] = new char*[dim_y];

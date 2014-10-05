@@ -10,8 +10,9 @@
 
 //May be return a pointer to the new stage..?
 void
-loadStage(){
+loadStage(SDL_Renderer* renderer){
 
 	firstLevel->loadMap("GRID.txt");
+	firstLevel->loadSpriteMap(renderer);
 
 }

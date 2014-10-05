@@ -108,7 +108,11 @@ bool init(){
 			return false;
 		}
 		else{
-			renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
+			// Vsync causes the refresh rate of the window to be the same as the refresh rate of the monitor
+			// May cause a slow down due to the refresh rate of the monitor, however, there will be no image
+			// tears during the refresh.
+			// SDL_RENDERER_PRESENTVSYNC
+			renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
 			if( renderer == NULL){
 				printf("Renderer could not be craeted! SDL Error: %s\n", SDL_GetError() );
 			}
@@ -294,7 +298,8 @@ int main( int argc, char* args[] )
 		//pos.x = 0; pos.y = 0;
 		//loadMedia("x.bmp", pos);
 		pos.x = 20; pos.y = 20;
-		loadStage(); //Loads all the necessary map info
+		// mapHandler.h
+		loadStage(renderer); //Loads all the necessary map info
 
 		objectDot.loadMedia("39_tiling/dot.bmp", renderer);
 		sdl_surface_list.push_back(objectDot.getSpriteSurface());
@@ -364,12 +369,31 @@ int main( int argc, char* args[] )
 		// clean the screen first
 		SDL_SetRenderDrawColor( renderer, 255, 255, 0, 255 );
 		SDL_RenderClear( renderer );
-		firstLevel->drawMap(renderer);
+		firstLevel->drawMap(renderer, dotPos);
 
 		for( int i = 0; i < sdl_surface_list.size(); i++){
 			//SDL_BlitSurface( sdl_surface_list[i], NULL, screenSurface, sdl_rect_list[i] );
-			SDL_RenderCopy( renderer, sdl_texture_list[i], NULL , sdl_rect_list[i]);
+			int x, y;
+			x = sdl_rect_list[i]->x;
+			y = sdl_rect_list[i]->y;
+
+			if( sdl_rect_list[i]->x > SCREEN_WIDTH/2 ){
+				if( SCREEN_WIDTH/2 > firstLevel->LEVEL_WIDTH - x ){
+					x = SCREEN_WIDTH - (firstLevel->LEVEL_WIDTH - x);
+				}
+				else{
+					x = SCREEN_WIDTH/2;
+				}
+				printf("x: %d\n", x);
+			}
+			if( sdl_rect_list[i]->y > SCREEN_HEIGHT ){
+				y = sdl_rect_list[i]->y - SCREEN_HEIGHT;
+			}
+
+			SDL_Rect temp = {x, y, 20, 20};
+			SDL_RenderCopy( renderer, sdl_texture_list[i], NULL , &temp);
 		}
+		
 		//SDL_BlitSurface( sdl_surface_list[0], NULL, screenSurface, aiPos );
 		//update( window );
 		SDL_RenderPresent(renderer);
