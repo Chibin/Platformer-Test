@@ -384,10 +384,16 @@ int main( int argc, char* args[] )
 				else{
 					x = SCREEN_WIDTH/2;
 				}
-				printf("x: %d\n", x);
+				//printf("x: %d\n", x);
 			}
-			if( sdl_rect_list[i]->y > SCREEN_HEIGHT ){
-				y = sdl_rect_list[i]->y - SCREEN_HEIGHT;
+			if( sdl_rect_list[i]->y > SCREEN_HEIGHT/2 ){
+				if( SCREEN_HEIGHT/2 > firstLevel->LEVEL_HEIGHT - y ){
+					y = SCREEN_HEIGHT - (firstLevel->LEVEL_HEIGHT - y);
+				}
+				else
+					y = SCREEN_HEIGHT/2;
+				//y = sdl_rect_list[i]->y - SCREEN_HEIGHT;
+				printf("y: %d\n", y);
 			}
 
 			SDL_Rect temp = {x, y, 20, 20};

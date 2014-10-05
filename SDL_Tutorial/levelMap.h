@@ -1,5 +1,4 @@
-struct levelMap{
-
+struct levelMap{ 
 	short tile_h, tile_w;
 	short dim_x, dim_y;
 	short LEVEL_WIDTH, LEVEL_HEIGHT;
@@ -265,8 +264,12 @@ levelMap::drawMap(SDL_Renderer* _renderer, SDL_Rect* camera){
 		else
 			x = camera->x - 640/2;
 	}
-	if( camera->y > 480 ){
-		y = camera->y - 480;
+	if( camera->y > 480/2 ){
+		if( LEVEL_HEIGHT - camera->y < 480/2){
+			y = LEVEL_HEIGHT - 480; 
+		}
+		else
+			y = camera->y - 480/2;
 	}
 	SDL_Rect renderQuad = {x, y, 640, 480};
 	SDL_RenderCopy( _renderer, texture_map, &renderQuad, NULL);
